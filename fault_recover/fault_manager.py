@@ -556,10 +556,8 @@ class FaultMgr:
 
         from verl.checkpoint_engine import CheckpointEngineManager
 
-        if cls.trainer.config.reward_model.enable and cls.trainer.config.reward_model.enable_resource_pool:
-            rm_resource_pool = cls.trainer.resource_pool_manager.get_resource_pool(Role.RewardModel)
-        else:
-            rm_resource_pool = None
+        if cls.trainer.use_reward_loop and cls.trainer.use_rm:
+            raise NotImplementedError(f'[fault_manager] fault_recover does not support use_rm yet')
 
         [ray.kill(w) for w in cls.trainer.async_rollout_manager.agent_loop_workers]
         [ray.get(rr.server_handle.clear_engine.remote()) for rr in cls.trainer.async_rollout_manager.rollout_replicas]
@@ -569,7 +567,7 @@ class FaultMgr:
             config=cls.trainer.config,
             worker_group=cls.trainer.actor_rollout_wg,
             rollout_resource_pool=actor_rollout_resource_pool,
-            rm_resource_pool=rm_resource_pool,
+            reward_loop_worker_handles=None,
         )
 
         cls.trainer.checkpoint_manager = CheckpointEngineManager(
